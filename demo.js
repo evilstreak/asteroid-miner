@@ -247,8 +247,8 @@ var Asteroid = function(world, radius, verticesCount, position, velocity, angula
 
   for (var i = 0; i < verticesCount; i++) {
     var angle = i * 2 * Math.PI / verticesCount,
-        x = radius * Math.cos(angle) + Math.random() * radius * 0.4,
-        y = radius * Math.sin(angle) + Math.random() * radius * 0.4;
+        x = radius * Math.cos(angle) + (Math.random() - 0.5) * radius * 0.3,
+        y = radius * Math.sin(angle) + (Math.random() - 0.5) * radius * 0.3;
 
     this.vertices.push([x, y]);
   }
