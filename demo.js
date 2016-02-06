@@ -53,11 +53,23 @@ Game.prototype.tick = function tick() {
 Game.prototype.update = function update(timeDelta) {
   this.ship.update();
 
+  worldParticles.forEach(function(particle, index) {
+    particle.update(timeDelta / 1000);
+
+    if (particle.expired()) {
+      delete worldParticles[index];
+    }
+  }.bind(this));
+
   this.world.step(1 / 60, timeDelta / 1000);
 };
 
 Game.prototype.render = function render() {
   this.context.clearRect(0, 0, this.width, this.height);
+
+  worldParticles.forEach(function(particle) {
+    particle.render(this.context);
+  }.bind(this));
 
   this.ship.render(this.context);
 };
@@ -138,6 +150,7 @@ var Thruster = function(ship, position, angle, key) {
   this.key = key;
 
   this.firing = false;
+  this.particles = [];
 };
 
 Thruster.prototype.render = function render(context) {
@@ -148,6 +161,10 @@ Thruster.prototype.render = function render(context) {
   if (this.firing) {
     context.fillStyle = "red";
   }
+
+  this.particles.forEach(function(particle) {
+    particle.render(context);
+  });
 
   context.beginPath();
   context.moveTo(3, 3);
@@ -166,11 +183,54 @@ Thruster.prototype.update = function update() {
     p2.vec2.rotate(force, force, this.angle);
 
     this.ship.body.applyForceLocal(force, this.position);
+
+    this.spawnParticles(force);
   }
 };
 
 Thruster.prototype.fire = function fire(keys) {
   this.firing = keys[this.key];
+};
+
+Thruster.prototype.spawnParticles = function spawnParticles(vector) {
+  var worldPosition = [], worldVector = [], particle;
+
+  this.ship.body.toWorldFrame(worldPosition, this.position),
+  this.ship.body.vectorToWorldFrame(worldVector, vector),
+  particle = new ExhaustParticle(worldPosition, worldVector);
+
+  worldParticles.push(particle);
+};
+
+var worldParticles = [];
+
+var ExhaustParticle = function(position, vector) {
+  this.position = position;
+  this.vector = vector;
+
+  this.timeToLive = 1;
+};
+
+ExhaustParticle.prototype.constructor = ExhaustParticle;
+
+ExhaustParticle.prototype.render = function render(context) {
+  context.beginPath();
+  context.arc(
+    this.position[0],
+    this.position[1],
+    2 * this.timeToLive,
+    0,
+    2 * Math.PI
+  );
+  context.fill();
+};
+
+ExhaustParticle.prototype.update = function update(timeDelta) {
+  this.timeToLive -= timeDelta;
+};
+
+ExhaustParticle.prototype.expired = function expired() {
+  return this.timeToLive < 0;
 };
 
 var keyboardMap = [
