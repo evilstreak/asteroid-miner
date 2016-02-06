@@ -29,7 +29,14 @@ var Game = function(context, width, height) {
     return false;
   });
 
-  this.ship = new Ship(this.world, keys);
+  this.ship = new Ship(this.world, [400, 200], keys);
+
+  this.asteroids = [];
+  this.asteroids.push(
+    new Asteroid(this.world, 75, 8, [50, 50], [5, 5], 0.05),
+    new Asteroid(this.world, 75, 8, [200, 200], [5, 5], 0.05),
+    new Asteroid(this.world, 75, 8, [400, 400], [5, 5], 0.05)
+  );
 };
 
 Game.prototype.constructor = Game;
@@ -72,18 +79,20 @@ Game.prototype.render = function render() {
   }.bind(this));
 
   this.ship.render(this.context);
+
+  this.asteroids.forEach(function(asteroid) {
+    asteroid.render(this.context);
+  }.bind(this));
 };
 
-var Ship = function(world, keys) {
+var Ship = function(world, position, keys) {
   this.keys = keys;
 
   this.body = new p2.Body({
     angularDamping: 0,
     damping: 0,
-    // TODO try a bigger mass for less force effect
     mass: 1,
-    position: [300, 200],
-    //angularVelocity: 0.002
+    position: position
   });
 
   this.body.addShape(
@@ -231,6 +240,53 @@ ExhaustParticle.prototype.update = function update(timeDelta) {
 
 ExhaustParticle.prototype.expired = function expired() {
   return this.timeToLive < 0;
+};
+
+var Asteroid = function(world, radius, verticesCount, position, velocity, angularVelocity) {
+  this.vertices = [];
+
+  for (var i = 0; i < verticesCount; i++) {
+    var angle = i * 2 * Math.PI / verticesCount,
+        x = radius * Math.cos(angle) + Math.random() * radius * 0.4,
+        y = radius * Math.sin(angle) + Math.random() * radius * 0.4;
+
+    this.vertices.push([x, y]);
+  }
+
+  this.body = new p2.Body({
+    angularDamping: 0,
+    damping: 0,
+    mass: 10,
+    position: position,
+    velocity: velocity,
+    angularVelocity: angularVelocity
+  });
+
+  this.body.addShape(
+    new p2.Circle({ radius: radius })
+  );
+
+  world.addBody(this.body);
+};
+
+Asteroid.prototype.constructor = Asteroid;
+
+Asteroid.prototype.render = function render(context) {
+  context.save();
+  context.translate(
+    this.body.interpolatedPosition[0],
+    this.body.interpolatedPosition[1]
+  );
+  context.rotate(this.body.interpolatedAngle);
+
+  context.beginPath();
+  this.vertices.forEach(function(vertex) {
+    context.lineTo(vertex[0], vertex[1]);
+  });
+  context.closePath();
+  context.stroke();
+
+  context.restore();
 };
 
 var keyboardMap = [
