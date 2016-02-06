@@ -37,6 +37,18 @@ var Game = function(context, width, height) {
     new Asteroid(this.world, 75, 8, [200, 200], [5, 5], 0.05),
     new Asteroid(this.world, 75, 8, [400, 400], [5, 5], 0.05)
   );
+
+  this.world.on("beginContact", function(e) {
+    if (this.ship.body === e.bodyA || this.ship.body === e.bodyB) {
+      this.ship.beginContact();
+    }
+  }.bind(this));
+
+  this.world.on("endContact", function(e) {
+    if (this.ship.body === e.bodyA || this.ship.body === e.bodyB) {
+      this.ship.endContact();
+    }
+  }.bind(this));
 };
 
 Game.prototype.constructor = Game;
@@ -107,6 +119,9 @@ var Ship = function(world, position, keys) {
     new Thruster(this, [18, 12], 0, "J"),
     new Thruster(this, [-18, 12], 0, "F")
   ];
+
+  this.preContactVelocity = [];
+  this.destroyed = false;
 };
 
 Ship.prototype.constructor = Ship;
@@ -122,6 +137,10 @@ Ship.prototype.update = function update() {
 };
 
 Ship.prototype.render = function render(context) {
+  if (this.destroyed) {
+    return;
+  }
+
   context.save();
   context.translate(
     this.body.interpolatedPosition[0],
@@ -166,6 +185,26 @@ Ship.prototype.render = function render(context) {
   });
 
   context.restore();
+};
+
+Ship.prototype.beginContact = function beginContact() {
+  p2.vec2.copy(this.preContactVelocity, this.body.velocity);
+};
+
+Ship.prototype.endContact = function endContact() {
+  var dv = [], magnitude;
+
+  p2.vec2.subtract(dv, this.body.velocity, this.preContactVelocity);
+  magnitude = p2.vec2.length(dv);
+
+  if (magnitude > 10) {
+    this.explode();
+  }
+};
+
+Ship.prototype.explode = function explode() {
+  this.destroyed = true;
+  this.body.world.removeBody(this.body);
 };
 
 var Thruster = function(ship, position, angle, key) {
