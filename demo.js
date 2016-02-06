@@ -338,9 +338,7 @@ var Asteroid = function(world, radius, verticesCount, position, velocity, angula
     angularVelocity: angularVelocity
   });
 
-  this.body.addShape(
-    new p2.Circle({ radius: radius })
-  );
+  this.body.fromPolygon(this.vertices);
 
   world.addBody(this.body);
 };
@@ -356,7 +354,7 @@ Asteroid.prototype.render = function render(context) {
   context.rotate(this.body.interpolatedAngle);
 
   context.beginPath();
-  this.vertices.forEach(function(vertex) {
+  this.body.shapes[0].vertices.forEach(function(vertex) {
     context.lineTo(vertex[0], vertex[1]);
   });
   context.closePath();
@@ -366,20 +364,12 @@ Asteroid.prototype.render = function render(context) {
     // draw spot on the centre
     context.save();
     context.fillStyle = "red";
-    context.fillRect(-1, -1, 2, 2);
-    context.restore();
-
-    context.save();
-    context.fillStyle = "rgba(255, 255, 255, 0.3)";
-    context.beginPath();
-    context.arc(
-      this.body.shapes[0].position[0],
-      this.body.shapes[0].position[1],
-      this.body.shapes[0].radius,
-      0,
-      2 * Math.PI
+    context.fillRect(
+      -1 + this.body.shapes[0].position[0],
+      -1 + this.body.shapes[0].position[1],
+      2,
+      2
     );
-    context.fill();
     context.restore();
   }
 
