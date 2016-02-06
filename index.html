@@ -19,6 +19,8 @@
   <canvas id="demo" width="1200" height="800" />
 
   <script type="text/javascript">
+    DEBUG = !!window.location.search.match(/[?&]debug([=&]|$)/);
+
     var canvas = document.getElementById("demo"),
         context = canvas.getContext("2d"),
         game = new Game(context, canvas.width, canvas.height);

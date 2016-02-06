@@ -129,12 +129,6 @@ Ship.prototype.render = function render(context) {
   );
   context.rotate(this.body.interpolatedAngle);
 
-  // draw spot on the centre
-  context.save();
-  context.fillStyle = "red";
-  context.fillRect(-1, -1, 2, 2);
-  context.restore();
-
   context.beginPath();
   context.moveTo(0, -18);
   context.lineTo(21, -9);
@@ -144,6 +138,28 @@ Ship.prototype.render = function render(context) {
   context.lineTo(-21, -9);
   context.closePath();
   context.stroke();
+
+  if (DEBUG) {
+    // draw spot on the centre
+    context.save();
+    context.fillStyle = "red";
+    context.fillRect(-1, -1, 2, 2);
+    context.restore();
+
+    // draw collision shape
+    context.save();
+    context.fillStyle = "rgba(255, 255, 255, 0.3)";
+    context.beginPath();
+    context.arc(
+      this.body.shapes[0].position[0],
+      this.body.shapes[0].position[1],
+      this.body.shapes[0].radius,
+      0,
+      2 * Math.PI
+    );
+    context.fill();
+    context.restore();
+  }
 
   this.thrusters.forEach(function(thruster) {
     thruster.render(context);
@@ -285,6 +301,27 @@ Asteroid.prototype.render = function render(context) {
   });
   context.closePath();
   context.stroke();
+
+  if (DEBUG) {
+    // draw spot on the centre
+    context.save();
+    context.fillStyle = "red";
+    context.fillRect(-1, -1, 2, 2);
+    context.restore();
+
+    context.save();
+    context.fillStyle = "rgba(255, 255, 255, 0.3)";
+    context.beginPath();
+    context.arc(
+      this.body.shapes[0].position[0],
+      this.body.shapes[0].position[1],
+      this.body.shapes[0].radius,
+      0,
+      2 * Math.PI
+    );
+    context.fill();
+    context.restore();
+  }
 
   context.restore();
 };
