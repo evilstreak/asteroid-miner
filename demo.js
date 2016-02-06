@@ -261,6 +261,10 @@ Thruster.prototype.spawnParticles = function spawnParticles(vector) {
 
   this.ship.body.toWorldFrame(worldPosition, this.position),
   this.ship.body.vectorToWorldFrame(worldVector, vector),
+  p2.vec2.negate(worldVector, worldVector);
+  p2.vec2.scale(worldVector, worldVector, 1.5 + Math.random());
+  p2.vec2.rotate(worldVector, worldVector, (0.125 * Math.random() - 0.0625) * Math.PI);
+
   particle = new ExhaustParticle(worldPosition, worldVector);
 
   worldParticles.push(particle);
@@ -268,9 +272,9 @@ Thruster.prototype.spawnParticles = function spawnParticles(vector) {
 
 var worldParticles = [];
 
-var ExhaustParticle = function(position, vector) {
+var ExhaustParticle = function(position, velocity) {
   this.position = position;
-  this.vector = vector;
+  this.velocity = velocity;
 
   this.timeToLive = 1;
 };
@@ -278,18 +282,24 @@ var ExhaustParticle = function(position, vector) {
 ExhaustParticle.prototype.constructor = ExhaustParticle;
 
 ExhaustParticle.prototype.render = function render(context) {
+  context.save();
   context.beginPath();
   context.arc(
     this.position[0],
     this.position[1],
-    2 * this.timeToLive,
+    3 * this.timeToLive,
     0,
     2 * Math.PI
   );
+  context.fillStyle = "rgba(255, 255, 255, 0.3)";
   context.fill();
+  context.restore();
 };
 
 ExhaustParticle.prototype.update = function update(timeDelta) {
+  this.position[0] += this.velocity[0] * timeDelta;
+  this.position[1] += this.velocity[1] * timeDelta;
+
   this.timeToLive -= timeDelta;
 };
 
