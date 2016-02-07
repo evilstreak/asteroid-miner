@@ -262,8 +262,6 @@ Thruster.prototype.spawnParticles = function spawnParticles(vector) {
   this.ship.body.toWorldFrame(worldPosition, this.position),
   this.ship.body.vectorToWorldFrame(worldVector, vector),
   p2.vec2.negate(worldVector, worldVector);
-  p2.vec2.scale(worldVector, worldVector, 1.5 + Math.random());
-  p2.vec2.rotate(worldVector, worldVector, (0.25 * Math.random() - 0.125) * Math.PI);
 
   particle = new ExhaustParticle(worldPosition, worldVector);
 
@@ -272,9 +270,12 @@ Thruster.prototype.spawnParticles = function spawnParticles(vector) {
 
 var worldParticles = [];
 
-var ExhaustParticle = function(position, velocity) {
+var ExhaustParticle = function(position, vector) {
   this.position = position;
-  this.velocity = velocity;
+  this.velocity = [];
+
+  p2.vec2.scale(this.velocity, vector, 1.5 + Math.random());
+  p2.vec2.rotate(this.velocity, this.velocity, (0.25 * Math.random() - 0.125) * Math.PI);
 
   this.timeToLive = 1;
 
