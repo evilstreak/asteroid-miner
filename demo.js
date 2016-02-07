@@ -283,8 +283,8 @@ Thruster.prototype.fire = function fire(keys) {
 Thruster.prototype.spawnParticles = function spawnParticles(vector) {
   var worldPosition = [], worldVector = [], particle;
 
-  this.ship.body.toWorldFrame(worldPosition, this.position),
-  this.ship.body.vectorToWorldFrame(worldVector, vector),
+  this.ship.body.toWorldFrame(worldPosition, this.position);
+  this.ship.body.vectorToWorldFrame(worldVector, vector);
   p2.vec2.negate(worldVector, worldVector);
 
   particle = new ExhaustParticle(worldPosition, worldVector);
@@ -427,7 +427,7 @@ Harpoon.prototype.fire = function fire() {
       worldVector = [],
       vector = [0, 150];
 
-  this.ship.body.toWorldFrame(worldPosition, this.position),
+  this.ship.body.toWorldFrame(worldPosition, this.position);
 
   p2.vec2.rotate(vector, vector, this.angle);
   this.ship.body.vectorToWorldFrame(worldVector, vector);
