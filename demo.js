@@ -295,8 +295,10 @@ Thruster.prototype.spawnParticles = function spawnParticles(vector) {
 var worldParticles = [];
 
 var ExhaustParticle = function(position, vector) {
-  this.position = position;
+  this.position = [];
   this.velocity = [];
+
+  p2.vec2.copy(this.position, position);
 
   p2.vec2.scale(this.velocity, vector, 1.5 + Math.random());
   p2.vec2.rotate(this.velocity, this.velocity, (0.25 * Math.random() - 0.125) * Math.PI);
