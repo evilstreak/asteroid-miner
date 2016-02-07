@@ -224,6 +224,17 @@ Ship.prototype.endContact = function endContact() {
 };
 
 Ship.prototype.explode = function explode() {
+  var i, vector;
+
+  for (i = 0; i < 600; ++i) {
+    vector = [0, 5 + 25 * Math.random()];
+    p2.vec2.rotate(vector, vector, 2 * Math.PI * Math.random());
+
+    worldParticles.push(
+      new ExhaustParticle(this.body.position, vector)
+    );
+  }
+
   this.destroyed = true;
   this.body.world.removeBody(this.body);
 };
