@@ -122,10 +122,10 @@ var Ship = function(world, position, keys) {
   world.addBody(this.body);
 
   this.thrusters = [
-    new Thruster(this, [-18, -12], Math.PI, ["E"]),
-    new Thruster(this, [18, -12], Math.PI, ["I"]),
-    new Thruster(this, [18, 12], 0, ["J"]),
-    new Thruster(this, [-18, 12], 0, ["F"])
+    new Thruster(this, [-18, -12], Math.PI, ["E", "DOWN", "LEFT"]),
+    new Thruster(this, [18, -12], Math.PI, ["I", "DOWN", "RIGHT"]),
+    new Thruster(this, [18, 12], 0, ["J", "UP", "LEFT"]),
+    new Thruster(this, [-18, 12], 0, ["F", "UP", "RIGHT"])
   ];
 
   this.harpoons = [
