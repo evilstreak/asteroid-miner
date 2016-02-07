@@ -506,6 +506,18 @@ var HarpoonTether = function(startBody, startPosition, endBody, endPosition) {
   this.endBody = endBody;
   this.endPosition = endPosition;
 
+  var spring = new p2.LinearSpring(
+    this.startBody,
+    this.endBody,
+    {
+      stiffness: 1000,
+      localAnchorA: this.startPosition,
+      localAnchorB: this.endPosition
+    }
+  );
+
+  this.startBody.world.addSpring(spring);
+
   worldTethers.push(this);
 };
 
