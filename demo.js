@@ -129,8 +129,7 @@ var Ship = function(world, position, keys) {
   ];
 
   this.harpoons = [
-    new Harpoon(this, [-10, 20], 0.0625 * Math.PI, ["SPACE"]),
-    new Harpoon(this, [10, 20], -0.0625 * Math.PI, ["SPACE"])
+    new Harpoon(this, [0, 22], 0, ["SPACE"])
   ];
 
   this.preContactVelocity = [];
