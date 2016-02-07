@@ -33,9 +33,9 @@ var Game = function(context, width, height) {
 
   this.asteroids = [];
   this.asteroids.push(
-    new Asteroid(this.world, 75, 8, [50, 50], [5, 5], 0.05),
-    new Asteroid(this.world, 75, 8, [200, 200], [5, 5], 0.05),
-    new Asteroid(this.world, 75, 8, [400, 400], [5, 5], 0.05)
+    new Asteroid(this.world, 75, 8, [50, 50], [20, 20], 0.05),
+    new Asteroid(this.world, 75, 8, [200, 200], [20, 20], 0.05),
+    new Asteroid(this.world, 75, 8, [400, 400], [20, 20], 0.05)
   );
 
   this.world.on("beginContact", function(e) {
