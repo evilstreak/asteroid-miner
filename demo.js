@@ -114,10 +114,10 @@ var Ship = function(world, position, keys) {
   world.addBody(this.body);
 
   this.thrusters = [
-    new Thruster(this, [-18, -12], Math.PI, "E"),
-    new Thruster(this, [18, -12], Math.PI, "I"),
-    new Thruster(this, [18, 12], 0, "J"),
-    new Thruster(this, [-18, 12], 0, "F")
+    new Thruster(this, [-18, -12], Math.PI, ["E"]),
+    new Thruster(this, [18, -12], Math.PI, ["I"]),
+    new Thruster(this, [18, 12], 0, ["J"]),
+    new Thruster(this, [-18, 12], 0, ["F"])
   ];
 
   this.preContactVelocity = [];
@@ -207,11 +207,11 @@ Ship.prototype.explode = function explode() {
   this.body.world.removeBody(this.body);
 };
 
-var Thruster = function(ship, position, angle, key) {
+var Thruster = function(ship, position, angle, keys) {
   this.ship = ship;
   this.position = position;
   this.angle = angle;
-  this.key = key;
+  this.keys = keys;
 
   this.firing = false;
   this.particles = [];
@@ -253,7 +253,10 @@ Thruster.prototype.update = function update() {
 };
 
 Thruster.prototype.fire = function fire(keys) {
-  this.firing = keys[this.key];
+  this.firing = false;
+  this.keys.forEach(function(key) {
+    this.firing = this.firing || keys[key];
+  }.bind(this));
 };
 
 Thruster.prototype.spawnParticles = function spawnParticles(vector) {
