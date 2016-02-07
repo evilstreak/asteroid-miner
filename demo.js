@@ -279,13 +279,13 @@ var ExhaustParticle = function(position, vector) {
 
   this.timeToLive = 1;
 
-  this.size = 8;
+  this.size = 6 + Math.random() * 4;
   this.angle = 0;
   this.angularVelocity = 20 * Math.random() - 10;
 
-  this.r = Math.ceil(160 + 95 * Math.random());
+  this.r = Math.ceil(210 + 45 * Math.random());
   this.g = Math.ceil(160 + 95 * Math.random());
-  this.b = Math.ceil(160 + 95 * Math.random());
+  this.b = Math.ceil(100 + 155 * Math.random());
   this.a = 0.1 + Math.random() * 0.3;
 };
 
