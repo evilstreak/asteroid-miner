@@ -143,10 +143,6 @@ Ship.prototype.update = function update() {
     thruster.fire(this.keys);
   }.bind(this));
 
-  this.thrusters.forEach(function(thruster) {
-    thruster.update();
-  });
-
   this.harpoons.forEach(function(harpoon) {
     harpoon.update(this.keys);
   }.bind(this));
@@ -246,6 +242,8 @@ var Thruster = function(ship, position, angle, keys) {
 
   this.firing = false;
   this.particles = [];
+
+  this.ship.body.world.on("postStep", this.postStep.bind(this));
 };
 
 Thruster.prototype.render = function render(context) {
@@ -272,7 +270,7 @@ Thruster.prototype.render = function render(context) {
   context.restore();
 };
 
-Thruster.prototype.update = function update() {
+Thruster.prototype.postStep = function postStep() {
   if (this.firing) {
     var force = [0, -10];
     p2.vec2.rotate(force, force, this.angle);
