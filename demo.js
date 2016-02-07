@@ -90,6 +90,14 @@ Game.prototype.render = function render() {
     particle.render(this.context);
   }.bind(this));
 
+  worldProjectiles.forEach(function(projectile) {
+    projectile.render(this.context);
+  }.bind(this));
+
+  worldTethers.forEach(function(tether) {
+    tether.render(this.context);
+  }.bind(this));
+
   this.ship.render(this.context);
 
   this.asteroids.forEach(function(asteroid) {
@@ -120,6 +128,11 @@ var Ship = function(world, position, keys) {
     new Thruster(this, [-18, 12], 0, ["F"])
   ];
 
+  this.harpoons = [
+    new Harpoon(this, [-10, 20], 0.0625 * Math.PI, ["SPACE"]),
+    new Harpoon(this, [10, 20], -0.0625 * Math.PI, ["SPACE"])
+  ];
+
   this.preContactVelocity = [];
   this.destroyed = false;
 };
@@ -134,6 +147,10 @@ Ship.prototype.update = function update() {
   this.thrusters.forEach(function(thruster) {
     thruster.update();
   });
+
+  this.harpoons.forEach(function(harpoon) {
+    harpoon.update(this.keys);
+  }.bind(this));
 };
 
 Ship.prototype.render = function render(context) {
@@ -182,6 +199,10 @@ Ship.prototype.render = function render(context) {
 
   this.thrusters.forEach(function(thruster) {
     thruster.render(context);
+  });
+
+  this.harpoons.forEach(function(harpoon) {
+    harpoon.render(context);
   });
 
   context.restore();
@@ -379,6 +400,129 @@ Asteroid.prototype.render = function render(context) {
 
   context.restore();
 };
+
+var Harpoon = function(ship, position, angle, keys) {
+  this.ship = ship;
+  this.position = position;
+  this.angle = angle;
+  this.keys = keys;
+
+  this.loaded = true;
+};
+
+Harpoon.prototype.update = function update(keys) {
+  var shouldFire = false
+
+  this.keys.forEach(function(key) {
+    shouldFire = shouldFire || keys[key];
+  });
+
+  if (shouldFire && this.loaded) {
+    this.fire();
+  }
+};
+
+Harpoon.prototype.fire = function fire() {
+  var worldPosition = [],
+      worldVector = [],
+      vector = [0, 150];
+
+  this.ship.body.toWorldFrame(worldPosition, this.position),
+
+  p2.vec2.rotate(vector, vector, this.angle);
+  this.ship.body.vectorToWorldFrame(worldVector, vector);
+
+  this.projectile = new HarpoonProjectile(this.ship.body.world, worldPosition, worldVector, this);
+  this.loaded = false;
+};
+
+Harpoon.prototype.render = function render(context) {
+};
+
+var HarpoonProjectile = function(world, position, velocity, launcher) {
+  this.struck = false;
+
+  this.body = new p2.Body({
+    mass: 1,
+    position: position,
+    velocity: velocity
+  });
+
+  var sensor = new p2.Circle({
+    radius: 1,
+    sensor: true
+  });
+
+  this.body.addShape(sensor);
+  world.addBody(this.body);
+
+  world.on("beginContact", function(e) {
+    if (this.body === e.bodyA || this.body === e.bodyB) {
+      worldProjectiles.splice(worldProjectiles.indexOf(this), 1);
+      world.removeBody(this.body);
+      this.createTether(launcher, e);
+    }
+  }.bind(this));
+
+  worldProjectiles.push(this);
+};
+
+var worldProjectiles = [];
+
+HarpoonProjectile.prototype.constructor = HarpoonProjectile;
+
+HarpoonProjectile.prototype.createTether = function createTether(launcher, e) {
+  var otherBody = (this.body === e.bodyA) ? e.bodyB : e.bodyA,
+      otherBodyPosition = [];
+
+  otherBody.toLocalFrame(otherBodyPosition, this.body.position);
+
+  new HarpoonTether(launcher.ship.body, launcher.position, otherBody, otherBodyPosition);
+};
+
+HarpoonProjectile.prototype.render = function render(context) {
+  context.save();
+  context.translate(
+    this.body.interpolatedPosition[0],
+    this.body.interpolatedPosition[1]
+  );
+  context.rotate(this.body.interpolatedAngle);
+
+  context.fillRect(-1, -1, 2, 2);
+
+  if (DEBUG) {
+    context.beginPath();
+    context.arc(0, 0, 10, 0, 2 * Math.PI);
+    context.fillStyle = this.struck ? "rgba(0, 255, 0, 0.5)" : "rgba(255, 0, 0, 0.5)";
+    context.fill();
+  }
+
+  context.restore();
+};
+
+var HarpoonTether = function(startBody, startPosition, endBody, endPosition) {
+  this.startBody = startBody;
+  this.startPosition = startPosition;
+  this.endBody = endBody;
+  this.endPosition = endPosition;
+
+  worldTethers.push(this);
+};
+
+HarpoonTether.prototype.render = function render(context) {
+  var start = [],
+      end = [];
+
+  this.startBody.toWorldFrame(start, this.startPosition);
+  this.endBody.toWorldFrame(end, this.endPosition);
+
+  context.beginPath();
+  context.moveTo(start[0], start[1]);
+  context.lineTo(end[0], end[1]);
+  context.stroke();
+}
+
+var worldTethers = [];
 
 var keyboardMap = [
   "", // [0]
