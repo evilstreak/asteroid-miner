@@ -1,5 +1,25 @@
 "use strict";
 
+var input = {
+      keys: {}
+    };
+
+window.addEventListener("keydown", function(e) {
+  var key = keyboardMap[e.keyCode];
+  input.keys[key] = true;
+
+  e.preventDefault();
+  return false;
+});
+
+window.addEventListener("keyup", function(e) {
+  var key = keyboardMap[e.keyCode];
+  delete input.keys[key];
+
+  e.preventDefault();
+  return false;
+});
+
 var Game = function(context, width, height) {
   this.context = context;
   this.width = width;
@@ -13,23 +33,7 @@ var Game = function(context, width, height) {
   });
   this.world.defaultContactMaterial.friction = 0;
 
-  var keys = {};
-  window.addEventListener("keydown", function(e) {
-    var key = keyboardMap[e.keyCode];
-    keys[key] = true;
-
-    e.preventDefault();
-    return false;
-  });
-  window.addEventListener("keyup", function(e) {
-    var key = keyboardMap[e.keyCode];
-    delete keys[key];
-
-    e.preventDefault();
-    return false;
-  });
-
-  this.ship = new Ship(this.world, [400, 200], keys);
+  this.ship = new Ship(this.world, [400, 200]);
 
   this.asteroids = [];
   this.asteroids.push(
@@ -105,9 +109,7 @@ Game.prototype.render = function render() {
   }.bind(this));
 };
 
-var Ship = function(world, position, keys) {
-  this.keys = keys;
-
+var Ship = function(world, position) {
   this.body = new p2.Body({
     angularDamping: 0,
     damping: 0,
@@ -140,11 +142,11 @@ Ship.prototype.constructor = Ship;
 
 Ship.prototype.update = function update() {
   this.thrusters.forEach(function(thruster) {
-    thruster.fire(this.keys);
+    thruster.fire();
   }.bind(this));
 
   this.harpoons.forEach(function(harpoon) {
-    harpoon.update(this.keys);
+    harpoon.update();
   }.bind(this));
 };
 
@@ -281,10 +283,10 @@ Thruster.prototype.postStep = function postStep() {
   }
 };
 
-Thruster.prototype.fire = function fire(keys) {
+Thruster.prototype.fire = function fire() {
   this.firing = false;
   this.keys.forEach(function(key) {
-    this.firing = this.firing || keys[key];
+    this.firing = this.firing || input.keys[key];
   }.bind(this));
 };
 
@@ -420,11 +422,11 @@ var Harpoon = function(ship, position, angle, keys) {
   this.loaded = true;
 };
 
-Harpoon.prototype.update = function update(keys) {
+Harpoon.prototype.update = function update() {
   var shouldFire = false
 
   this.keys.forEach(function(key) {
-    shouldFire = shouldFire || keys[key];
+    shouldFire = shouldFire || input.keys[key];
   });
 
   if (shouldFire && this.loaded) {
