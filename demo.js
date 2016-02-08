@@ -1,6 +1,7 @@
 "use strict";
 
-var input = {
+var world,
+    input = {
       keys: {}
     };
 
@@ -28,27 +29,27 @@ var Game = function(context, width, height) {
   context.lineWidth = 2;
   context.strokeStyle = context.fillStyle = "white";
 
-  this.world = new p2.World({
+  world = new p2.World({
     gravity: [0, 0]
   });
-  this.world.defaultContactMaterial.friction = 0;
+  world.defaultContactMaterial.friction = 0;
 
-  this.ship = new Ship(this.world, [400, 200]);
+  this.ship = new Ship([400, 200]);
 
   this.asteroids = [];
   this.asteroids.push(
-    new Asteroid(this.world, 75, 8, [50, 50], [20, 20], 0.05),
-    new Asteroid(this.world, 75, 8, [200, 200], [20, 20], 0.05),
-    new Asteroid(this.world, 75, 8, [400, 400], [20, 20], 0.05)
+    new Asteroid(75, 8, [50, 50], [20, 20], 0.05),
+    new Asteroid(75, 8, [200, 200], [20, 20], 0.05),
+    new Asteroid(75, 8, [400, 400], [20, 20], 0.05)
   );
 
-  this.world.on("beginContact", function(e) {
+  world.on("beginContact", function(e) {
     if (this.ship.body === e.bodyA || this.ship.body === e.bodyB) {
       this.ship.beginContact();
     }
   }.bind(this));
 
-  this.world.on("endContact", function(e) {
+  world.on("endContact", function(e) {
     if (this.ship.body === e.bodyA || this.ship.body === e.bodyB) {
       this.ship.endContact();
     }
@@ -84,7 +85,7 @@ Game.prototype.update = function update(timeDelta) {
     }
   }.bind(this));
 
-  this.world.step(1 / 60, timeDelta / 1000);
+  world.step(1 / 60, timeDelta / 1000);
 };
 
 Game.prototype.render = function render() {
@@ -109,7 +110,7 @@ Game.prototype.render = function render() {
   }.bind(this));
 };
 
-var Ship = function(world, position) {
+var Ship = function(position) {
   this.body = new p2.Body({
     angularDamping: 0,
     damping: 0,
@@ -233,7 +234,7 @@ Ship.prototype.explode = function explode() {
   }
 
   this.destroyed = true;
-  this.body.world.removeBody(this.body);
+  world.removeBody(this.body);
 };
 
 var Thruster = function(ship, position, angle, keys) {
@@ -245,7 +246,7 @@ var Thruster = function(ship, position, angle, keys) {
   this.firing = false;
   this.particles = [];
 
-  this.ship.body.world.on("postStep", this.postStep.bind(this));
+  world.on("postStep", this.postStep.bind(this));
 };
 
 Thruster.prototype.render = function render(context) {
@@ -355,7 +356,7 @@ ExhaustParticle.prototype.expired = function expired() {
   return this.timeToLive < 0;
 };
 
-var Asteroid = function(world, radius, verticesCount, position, velocity, angularVelocity) {
+var Asteroid = function(radius, verticesCount, position, velocity, angularVelocity) {
   this.vertices = [];
 
   for (var i = 0; i < verticesCount; i++) {
@@ -444,14 +445,14 @@ Harpoon.prototype.fire = function fire() {
   p2.vec2.rotate(vector, vector, this.angle);
   this.ship.body.vectorToWorldFrame(worldVector, vector);
 
-  this.projectile = new HarpoonProjectile(this.ship.body.world, worldPosition, worldVector, this);
+  this.projectile = new HarpoonProjectile(worldPosition, worldVector, this);
   this.loaded = false;
 };
 
 Harpoon.prototype.render = function render(context) {
 };
 
-var HarpoonProjectile = function(world, position, velocity, launcher) {
+var HarpoonProjectile = function(position, velocity, launcher) {
   this.struck = false;
 
   this.body = new p2.Body({
@@ -528,7 +529,7 @@ var HarpoonTether = function(startBody, startPosition, endBody, endPosition) {
     }
   );
 
-  this.startBody.world.addSpring(spring);
+  world.addSpring(spring);
 
   worldTethers.push(this);
 };
