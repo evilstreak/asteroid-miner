@@ -56,23 +56,11 @@ Game.prototype.setUp = function setUp() {
   });
   world.defaultContactMaterial.friction = 0;
 
-  this.ship = new Ship([400, 200]);
+  new Ship([400, 200]);
 
   new Asteroid(75, 8, [50, 50], [20, 20], 0.05),
   new Asteroid(75, 8, [200, 200], [20, 20], 0.05),
   new Asteroid(75, 8, [400, 400], [20, 20], 0.05)
-
-  world.on("beginContact", function(e) {
-    if (this.ship.body === e.bodyA || this.ship.body === e.bodyB) {
-      this.ship.beginContact();
-    }
-  }.bind(this));
-
-  world.on("endContact", function(e) {
-    if (this.ship.body === e.bodyA || this.ship.body === e.bodyB) {
-      this.ship.endContact();
-    }
-  }.bind(this));
 };
 
 Game.prototype.start = function start() {
@@ -137,6 +125,18 @@ var Ship = function(position) {
 
   this.preContactVelocity = [];
   this.destroyed = false;
+
+  world.on("beginContact", function(e) {
+    if (this.body === e.bodyA || this.body === e.bodyB) {
+      this.beginContact();
+    }
+  }.bind(this));
+
+  world.on("endContact", function(e) {
+    if (this.body === e.bodyA || this.body === e.bodyB) {
+      this.endContact();
+    }
+  }.bind(this));
 };
 
 Ship.prototype.constructor = Ship;
