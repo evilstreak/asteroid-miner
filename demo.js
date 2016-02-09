@@ -1,6 +1,7 @@
 "use strict";
 
 var world,
+    game,
     input = {
       keys: {}
     };
@@ -26,9 +27,30 @@ var Game = function(context, width, height) {
   this.width = width;
   this.height = height;
 
+  this.objects = [];
+
   context.lineWidth = 2;
   context.strokeStyle = context.fillStyle = "white";
+};
 
+Game.prototype.constructor = Game;
+
+// idempotently add an object to the game for the update/render loop
+Game.prototype.addObject = function addObject(object) {
+  if (this.objects.indexOf(object) === -1) {
+    this.objects.push(object);
+  }
+};
+
+// idempotently rmoeve an object from the game for the update/render loop
+Game.prototype.removeObject = function removeObject(object) {
+  var index = this.objects.indexOf(object);
+  if (index > -1) {
+    this.objects.splice(index, 1);
+  }
+};
+
+Game.prototype.setUp = function setUp() {
   world = new p2.World({
     gravity: [0, 0]
   });
@@ -36,12 +58,9 @@ var Game = function(context, width, height) {
 
   this.ship = new Ship([400, 200]);
 
-  this.asteroids = [];
-  this.asteroids.push(
-    new Asteroid(75, 8, [50, 50], [20, 20], 0.05),
-    new Asteroid(75, 8, [200, 200], [20, 20], 0.05),
-    new Asteroid(75, 8, [400, 400], [20, 20], 0.05)
-  );
+  new Asteroid(75, 8, [50, 50], [20, 20], 0.05),
+  new Asteroid(75, 8, [200, 200], [20, 20], 0.05),
+  new Asteroid(75, 8, [400, 400], [20, 20], 0.05)
 
   world.on("beginContact", function(e) {
     if (this.ship.body === e.bodyA || this.ship.body === e.bodyB) {
@@ -55,8 +74,6 @@ var Game = function(context, width, height) {
     }
   }.bind(this));
 };
-
-Game.prototype.constructor = Game;
 
 Game.prototype.start = function start() {
   this.tick();
@@ -75,38 +92,20 @@ Game.prototype.tick = function tick() {
 };
 
 Game.prototype.update = function update(timeDelta) {
-  this.ship.update();
+  var secondsDelta = timeDelta / 1000;
 
-  worldParticles.forEach(function(particle, index) {
-    particle.update(timeDelta / 1000);
+  world.step(1 / 60, secondsDelta);
 
-    if (particle.expired()) {
-      delete worldParticles[index];
-    }
-  }.bind(this));
-
-  world.step(1 / 60, timeDelta / 1000);
+  this.objects.forEach(function(object) {
+    object.update(secondsDelta);
+  });
 };
 
 Game.prototype.render = function render() {
   this.context.clearRect(0, 0, this.width, this.height);
 
-  worldParticles.forEach(function(particle) {
-    particle.render(this.context);
-  }.bind(this));
-
-  worldProjectiles.forEach(function(projectile) {
-    projectile.render(this.context);
-  }.bind(this));
-
-  worldTethers.forEach(function(tether) {
-    tether.render(this.context);
-  }.bind(this));
-
-  this.ship.render(this.context);
-
-  this.asteroids.forEach(function(asteroid) {
-    asteroid.render(this.context);
+  this.objects.forEach(function(object) {
+    object.render(this.context);
   }.bind(this));
 };
 
@@ -123,6 +122,7 @@ var Ship = function(position) {
   );
 
   world.addBody(this.body);
+  game.addObject(this);
 
   this.thrusters = [
     new Thruster(this, [-18, -12], Math.PI, ["E", "DOWN", "LEFT"]),
@@ -228,9 +228,7 @@ Ship.prototype.explode = function explode() {
     vector = [0, 5 + 25 * Math.random()];
     p2.vec2.rotate(vector, vector, 2 * Math.PI * Math.random());
 
-    worldParticles.push(
-      new ExhaustParticle(this.body.position, vector)
-    );
+    new ExhaustParticle(this.body.position, vector)
   }
 
   this.destroyed = true;
@@ -292,18 +290,14 @@ Thruster.prototype.fire = function fire() {
 };
 
 Thruster.prototype.spawnParticles = function spawnParticles(vector) {
-  var worldPosition = [], worldVector = [], particle;
+  var worldPosition = [], worldVector = [];
 
   this.ship.body.toWorldFrame(worldPosition, this.position);
   this.ship.body.vectorToWorldFrame(worldVector, vector);
   p2.vec2.negate(worldVector, worldVector);
 
-  particle = new ExhaustParticle(worldPosition, worldVector);
-
-  worldParticles.push(particle);
+  new ExhaustParticle(worldPosition, worldVector);
 };
-
-var worldParticles = [];
 
 var ExhaustParticle = function(position, vector) {
   this.position = [];
@@ -324,6 +318,8 @@ var ExhaustParticle = function(position, vector) {
   this.g = Math.ceil(160 + 95 * Math.random());
   this.b = Math.ceil(100 + 155 * Math.random());
   this.a = 0.1 + Math.random() * 0.3;
+
+  game.addObject(this);
 };
 
 ExhaustParticle.prototype.constructor = ExhaustParticle;
@@ -345,15 +341,16 @@ ExhaustParticle.prototype.render = function render(context) {
 };
 
 ExhaustParticle.prototype.update = function update(timeDelta) {
-  this.position[0] += this.velocity[0] * timeDelta;
-  this.position[1] += this.velocity[1] * timeDelta;
-  this.angle += this.angularVelocity * timeDelta;
-
   this.timeToLive -= timeDelta;
-};
 
-ExhaustParticle.prototype.expired = function expired() {
-  return this.timeToLive < 0;
+  if (this.timeToLive > 0) {
+    this.position[0] += this.velocity[0] * timeDelta;
+    this.position[1] += this.velocity[1] * timeDelta;
+    this.angle += this.angularVelocity * timeDelta;
+  }
+  else {
+    game.removeObject(this);
+  }
 };
 
 var Asteroid = function(radius, verticesCount, position, velocity, angularVelocity) {
@@ -379,6 +376,7 @@ var Asteroid = function(radius, verticesCount, position, velocity, angularVeloci
   this.body.fromPolygon(this.vertices);
 
   world.addBody(this.body);
+  game.addObject(this);
 };
 
 Asteroid.prototype.constructor = Asteroid;
@@ -412,6 +410,10 @@ Asteroid.prototype.render = function render(context) {
   }
 
   context.restore();
+};
+
+Asteroid.prototype.update = function update() {
+  // noop
 };
 
 var Harpoon = function(ship, position, angle, keys) {
@@ -450,6 +452,7 @@ Harpoon.prototype.fire = function fire() {
 };
 
 Harpoon.prototype.render = function render(context) {
+  // noop
 };
 
 var HarpoonProjectile = function(position, velocity, launcher) {
@@ -471,16 +474,14 @@ var HarpoonProjectile = function(position, velocity, launcher) {
 
   world.on("beginContact", function(e) {
     if (this.body === e.bodyA || this.body === e.bodyB) {
-      worldProjectiles.splice(worldProjectiles.indexOf(this), 1);
       world.removeBody(this.body);
+      game.removeObject(this);
       this.createTether(launcher, e);
     }
   }.bind(this));
 
-  worldProjectiles.push(this);
+  game.addObject(this);
 };
-
-var worldProjectiles = [];
 
 HarpoonProjectile.prototype.constructor = HarpoonProjectile;
 
@@ -513,6 +514,10 @@ HarpoonProjectile.prototype.render = function render(context) {
   context.restore();
 };
 
+HarpoonProjectile.prototype.update = function update() {
+  // noop
+};
+
 var HarpoonTether = function(startBody, startPosition, endBody, endPosition) {
   this.startBody = startBody;
   this.startPosition = startPosition;
@@ -530,8 +535,11 @@ var HarpoonTether = function(startBody, startPosition, endBody, endPosition) {
   );
 
   world.addSpring(spring);
+  game.addObject(this);
+};
 
-  worldTethers.push(this);
+HarpoonTether.prototype.update = function update() {
+  // noop
 };
 
 HarpoonTether.prototype.render = function render(context) {
@@ -546,8 +554,6 @@ HarpoonTether.prototype.render = function render(context) {
   context.lineTo(end[0], end[1]);
   context.stroke();
 }
-
-var worldTethers = [];
 
 var keyboardMap = [
   "", // [0]
