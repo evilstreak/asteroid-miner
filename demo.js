@@ -113,14 +113,11 @@ var Ship = function(position) {
   world.addBody(this.body);
   game.addObject(this);
 
-  this.thrusters = [
+  this.attachments = [
     new Thruster(this, [-18, -12], Math.PI, ["E", "DOWN", "LEFT"]),
     new Thruster(this, [18, -12], Math.PI, ["I", "DOWN", "RIGHT"]),
     new Thruster(this, [18, 12], 0, ["J", "UP", "LEFT"]),
-    new Thruster(this, [-18, 12], 0, ["F", "UP", "RIGHT"])
-  ];
-
-  this.harpoons = [
+    new Thruster(this, [-18, 12], 0, ["F", "UP", "RIGHT"]),
     new Harpoon(this, [0, 22], 0, ["SPACE"])
   ];
 
@@ -143,12 +140,8 @@ var Ship = function(position) {
 Ship.prototype.constructor = Ship;
 
 Ship.prototype.update = function update() {
-  this.thrusters.forEach(function(thruster) {
-    thruster.fire();
-  }.bind(this));
-
-  this.harpoons.forEach(function(harpoon) {
-    harpoon.update();
+  this.attachments.forEach(function(attachment) {
+    attachment.update();
   }.bind(this));
 };
 
@@ -196,12 +189,8 @@ Ship.prototype.render = function render(context) {
     context.restore();
   }
 
-  this.thrusters.forEach(function(thruster) {
-    thruster.render(context);
-  });
-
-  this.harpoons.forEach(function(harpoon) {
-    harpoon.render(context);
+  this.attachments.forEach(function(attachment) {
+    attachment.render(context);
   });
 
   context.restore();
@@ -283,7 +272,8 @@ Thruster.prototype.postStep = function postStep() {
   }
 };
 
-Thruster.prototype.fire = function fire() {
+// TODO use keydown/up event to trigger this
+Thruster.prototype.update = function update() {
   this.firing = false;
   this.keys.forEach(function(key) {
     this.firing = this.firing || input.keys[key];
@@ -424,6 +414,7 @@ var Harpoon = function(ship, position, angle, keys) {
   this.loaded = true;
 };
 
+// TODO use keydown/up event to trigger this
 Harpoon.prototype.update = function update() {
   var shouldFire = false
 
