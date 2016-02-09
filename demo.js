@@ -4,7 +4,8 @@ var world,
     game,
     input = {
       keys: {}
-    };
+    },
+    noop = function() {};
 
 window.addEventListener("keydown", function(e) {
   var key = keyboardMap[e.keyCode];
@@ -412,9 +413,7 @@ Asteroid.prototype.render = function render(context) {
   context.restore();
 };
 
-Asteroid.prototype.update = function update() {
-  // noop
-};
+Asteroid.prototype.update = noop;
 
 var Harpoon = function(ship, position, angle, keys) {
   this.ship = ship;
@@ -451,9 +450,7 @@ Harpoon.prototype.fire = function fire() {
   this.loaded = false;
 };
 
-Harpoon.prototype.render = function render(context) {
-  // noop
-};
+Harpoon.prototype.render = noop;
 
 var HarpoonProjectile = function(position, velocity, launcher) {
   this.struck = false;
@@ -514,9 +511,7 @@ HarpoonProjectile.prototype.render = function render(context) {
   context.restore();
 };
 
-HarpoonProjectile.prototype.update = function update() {
-  // noop
-};
+HarpoonProjectile.prototype.update = noop;
 
 var HarpoonTether = function(startBody, startPosition, endBody, endPosition) {
   this.startBody = startBody;
@@ -538,9 +533,7 @@ var HarpoonTether = function(startBody, startPosition, endBody, endPosition) {
   game.addObject(this);
 };
 
-HarpoonTether.prototype.update = function update() {
-  // noop
-};
+HarpoonTether.prototype.update = noop;
 
 HarpoonTether.prototype.render = function render(context) {
   var start = [],
