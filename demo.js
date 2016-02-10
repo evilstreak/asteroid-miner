@@ -57,11 +57,8 @@ Game.prototype.setUp = function setUp() {
   });
   world.defaultContactMaterial.friction = 0;
 
+  new AsteroidBelt();
   new Ship([400, 200]);
-
-  new Asteroid(75, 8, [50, 50], [20, 20], 0.05),
-  new Asteroid(75, 8, [200, 200], [20, 20], 0.05),
-  new Asteroid(75, 8, [400, 400], [20, 20], 0.05)
 };
 
 Game.prototype.start = function start() {
@@ -344,6 +341,57 @@ ExhaustParticle.prototype.update = function update(timeDelta) {
   }
 };
 
+function continuousRangeRandomiser(start, end) {
+  var length = end - start;
+
+  return function() {
+    return start + length * Math.random();
+  };
+}
+
+function discreteRangeRandomiser(start, end) {
+  var randomiser = continuousRangeRandomiser(start, end);
+
+  return function() {
+    return Math.floor(randomiser());
+  }
+}
+
+var AsteroidBelt = function() {
+  this.radius = continuousRangeRandomiser(50, 100);
+  this.vertices = discreteRangeRandomiser(7, 12);
+  this.x = function() { return 1400; };
+  this.y = continuousRangeRandomiser(-50, 75);
+  this.vx = continuousRangeRandomiser(-55, -50);
+  this.vy = continuousRangeRandomiser(7.5, 8.5);
+  this.angularVelocity = continuousRangeRandomiser(-0.2, 0.2);
+  this.gap = continuousRangeRandomiser(3500, 12000);
+
+  this.tick();
+};
+
+AsteroidBelt.prototype.tick = function tick() {
+  this.createAsteroid();
+
+  window.setTimeout(this.tick.bind(this), this.gap());
+};
+
+AsteroidBelt.prototype.createAsteroid = function createAsteroid() {
+  new Asteroid(
+    this.radius(),
+    this.vertices(),
+    [
+      this.x(),
+      this.y()
+    ],
+    [
+      this.vx(),
+      this.vy()
+    ],
+    this.angularVelocity()
+  );
+};
+
 var Asteroid = function(radius, verticesCount, position, velocity, angularVelocity) {
   this.vertices = [];
 
@@ -358,13 +406,15 @@ var Asteroid = function(radius, verticesCount, position, velocity, angularVeloci
   this.body = new p2.Body({
     angularDamping: 0,
     damping: 0,
-    mass: 10,
+    mass: 1,
     position: position,
     velocity: velocity,
     angularVelocity: angularVelocity
   });
 
   this.body.fromPolygon(this.vertices);
+
+  this.body.setDensity(0.03);
 
   world.addBody(this.body);
   game.addObject(this);
