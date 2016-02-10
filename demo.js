@@ -111,10 +111,10 @@ var Ship = function(position) {
   game.addObject(this);
 
   this.attachments = [
-    new Thruster(this, [-18, -12], Math.PI, ["E", "DOWN", "LEFT"]),
-    new Thruster(this, [18, -12], Math.PI, ["I", "DOWN", "RIGHT"]),
-    new Thruster(this, [18, 12], 0, ["J", "UP", "LEFT"]),
-    new Thruster(this, [-18, 12], 0, ["F", "UP", "RIGHT"]),
+    new Thruster(this, 10, [-18, -12], Math.PI, ["E", "DOWN", "LEFT"]),
+    new Thruster(this, 10, [18, -12], Math.PI, ["I", "DOWN", "RIGHT"]),
+    new Thruster(this, 10, [18, 12], 0, ["J", "UP", "LEFT"]),
+    new Thruster(this, 10, [-18, 12], 0, ["F", "UP", "RIGHT"]),
     new Harpoon(this, [0, 22], 0, ["SPACE"])
   ];
 
@@ -222,8 +222,9 @@ Ship.prototype.explode = function explode() {
   world.removeBody(this.body);
 };
 
-var Thruster = function(ship, position, angle, keys) {
+var Thruster = function(ship, thrust, position, angle, keys) {
   this.ship = ship;
+  this.thrust = thrust;
   this.position = position;
   this.angle = angle;
   this.keys = keys;
@@ -260,7 +261,7 @@ Thruster.prototype.render = function render(context) {
 
 Thruster.prototype.postStep = function postStep() {
   if (this.firing) {
-    var force = [0, -10];
+    var force = [0, -this.thrust];
     p2.vec2.rotate(force, force, this.angle);
 
     this.ship.body.applyForceLocal(force, this.position);
